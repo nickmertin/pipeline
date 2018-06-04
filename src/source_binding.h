@@ -13,6 +13,8 @@ namespace pipeline {
     class source_binding {
     public:
         virtual void bind(std::function<void(T)> push, std::function<void()> unbind) = 0;
+
+        virtual ~source_binding() {}
     };
 }
 

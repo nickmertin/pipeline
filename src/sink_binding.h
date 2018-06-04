@@ -11,6 +11,8 @@ namespace pipeline {
     class sink_binding {
     public:
         virtual void push(T value) = 0;
+
+        virtual ~sink_binding() {}
     };
 }
 
