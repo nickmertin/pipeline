@@ -59,7 +59,7 @@ namespace pipeline {
 
         std::unordered_set<true_source_binding *> bindings;
 
-        generic_filter<T> *_filter;
+        generic_filter<T> *_filter = nullptr;
 
         void push_internal(T value) {
             for (true_source_binding *b : bindings) {

@@ -18,7 +18,8 @@ namespace pipeline {
         std::unique_ptr<sink_binding<T>> _sink;
 
         void bind() {
-            _source->bind([this] (const T &value) { _sink->push(value); }, [this] () { replace(nullptr, nullptr); });
+            if (_source && _sink)
+                _source->bind([this] (const T &value) { _sink->push(value); }, [this] () { replace(nullptr, nullptr); });
         }
 
     public:
@@ -26,7 +27,9 @@ namespace pipeline {
             bind();
         }
 
-        binding(source_binding<T> *_source, sink_binding<T> *_sink) : _source(_source), _sink(_sink) {}
+        binding(source_binding<T> *_source, sink_binding<T> *_sink) : _source(_source), _sink(_sink) {
+            bind();
+        }
 
         binding() : binding(nullptr, nullptr) {}
 

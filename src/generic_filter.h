@@ -14,11 +14,22 @@ namespace pipeline {
     template <class T>
     class generic_filter final : public filter<T> {
     private:
+        class in_source final : public source<T> {
+            generic_filter<T> *_filter;
+
+        public:
+            explicit in_source(generic_filter<T> *_filter) : _filter(_filter) {}
+
+            void accept(T value) {
+                this->push(value);
+            }
+        };
+
         class out_sink final : public sink<T> {
             generic_filter<T> *_filter;
 
         public:
-            out_sink(generic_filter<T> *_filter) : _filter(_filter) {}
+            explicit out_sink(generic_filter<T> *_filter) : _filter(_filter) {}
 
         protected:
             void accept(T value) override {
@@ -27,16 +38,18 @@ namespace pipeline {
         };
 
         filter<T> *_filter;
+        in_source _source;
         out_sink _sink;
 
     protected:
         void accept(T value) override {
-
+            _source.accept(value);
         }
 
     public:
         template <class TFilter>
-        generic_filter(const TFilter &_filter) : _filter(new TFilter(_filter)), _sink(this) { // NOLINT
+        generic_filter(const TFilter &_filter) : _filter(new TFilter(_filter)), _source(this), _sink(this) { // NOLINT
+            _source | *this->_filter;
             *this->_filter | _sink;
         }
 
