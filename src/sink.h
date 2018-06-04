@@ -37,6 +37,11 @@ namespace pipeline {
             else
                 _binding.replace(nullptr, nullptr);
         }
+
+        friend void operator|(T value, sink<T> &_sink) {
+            _sink._binding.replace(nullptr, nullptr);
+            _sink.accept(value);
+        }
     };
 }
 
