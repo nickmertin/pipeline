@@ -5,3 +5,11 @@
 #include "pipeline.h"
 #include "source.h"
 #include "sink.h"
+
+namespace pipeline {
+    template <>
+    class source<int>;
+
+    template <>
+    class sink<int>;
+}

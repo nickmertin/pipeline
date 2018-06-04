@@ -21,13 +21,14 @@ namespace pipeline {
             explicit true_sink_binding(sink<T> *_sink) : _sink(_sink) {}
             
             void push(T value) override {
-                _sink->push(value);
+                _sink->accept(value);
             }
         };
 
         binding<T> _binding;
 
-        virtual void push(T) = 0;
+    protected:
+        virtual void accept(T value) = 0;
 
     public:
         void bind(source_binding<T> *_source) {

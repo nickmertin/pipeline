@@ -26,6 +26,8 @@ namespace pipeline {
             bind();
         }
 
+        binding(source_binding<T> *_source, sink_binding<T> *_sink) : _source(_source), _sink(_sink) {}
+
         binding() : binding(nullptr, nullptr) {}
 
         binding(const binding<T> &) = delete;
@@ -38,9 +40,8 @@ namespace pipeline {
             bind();
         }
 
-        virtual ~binding() {
-            delete _source;
-            delete _sink;
+        void replace(source_binding<T> *_source, sink_binding<T> *_sink) {
+            replace(std::unique_ptr<source_binding<T>>(_source), std::unique_ptr<sink_binding<T>>(_sink));
         }
     };
 }
