@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <unordered_set>
+#include <vector>
 #include "source_binding.h"
 #include "sink.h"
 
@@ -22,26 +23,30 @@ namespace pipeline {
     class source {
     private:
         class true_source_binding : public source_binding<T> {
-        private:
+        protected:
             source<T> *_source;
+
+        private:
             std::function<void(T)> _push;
             std::function<void()> _unbind;
 
         public:
             explicit true_source_binding(source<T> *_source) : _source(_source) {}
 
-            void bind(std::function<void(T)> push, std::function<void()> unbind) override final {
+            void bind(std::function<void(T)> push, std::function<void()> unbind) final {
                 _push = push;
                 _unbind = unbind;
                 _source->bindings.insert(this);
             }
 
             void push(T value) {
-                _push(value);
+                if (_push)
+                    _push(value);
             }
 
             void unbind() {
-                _unbind();
+                if (_unbind)
+                    _unbind();
             }
 
             virtual ~true_source_binding() {
@@ -57,36 +62,51 @@ namespace pipeline {
             internal_source_binding(source<T> *_source, sink_binding<T> *_sink) : true_source_binding(_source), _binding(dynamic_cast<source_binding<T> *>(this), _sink) {}
         };
 
+        class filter_start final : public source_binding<T> {
+        public:
+            std::function<void(T)> push;
+
+            filter_start() : push() {}
+
+            void bind(std::function<void(T)> push, std::function<void()> unbind) override {
+                this->push = push;
+            }
+        };
+
+        class filter_end final : public sink<T> {
+        private:
+            source<T> *_source;
+
+        public:
+            explicit filter_end(source<T> *_source) : _source(_source) {}
+
+        protected:
+            void accept(T value) override {
+                _source->push_internal(value);
+            }
+        };
+
         std::unordered_set<true_source_binding *> bindings;
+        std::vector<generic_filter<T>> filters;
+        filter_start _filter_start;
+        filter_end _filter_end;
 
-        generic_filter<T> *_filter = nullptr;
+    public:
+        source() : _filter_end(this) {}
 
+    private:
         void push_internal(T value) {
             for (true_source_binding *b : bindings) {
                 b->push(value);
             }
         }
 
-        class filter_out_binding final : public sink_binding<T> {
-        private:
-            source<T> *_source;
-
-        public:
-            explicit filter_out_binding(source<T> *_source) : _source(_source) {}
-
-            void push(T value) override {
-                _source->push_internal(value);
-            }
-        };
-
-        binding<T> *out_binding;
-
     protected:
         void push(T value) {
-            if (_filter)
-                _filter->push(value);
-            else
+            if (filters.empty())
                 push_internal(value);
+            else
+                _filter_start.push(value);
         }
 
     public:
@@ -111,16 +131,23 @@ namespace pipeline {
             new internal_source_binding(this, new function_sink(_sink));
         }
 
-        source<T> &operator|=(filter<T> &_filter) {
-            generic_filter<T> *old = this->_filter;
-            this->_filter = old ? new generic_filter<T>(*old | _filter) : new generic_filter<T>(_filter);
-            delete out_binding;
-            out_binding = new binding<T>(new true_source_binding(this->_filter), new filter_out_binding(this));
+        template <class TFilter>
+        source<T> &operator|=(const TFilter &_filter) {
+            if (filters.empty()) {
+                filters.push_back(_filter);
+                filters.front().bind(&_filter_start);
+                filters.front() | _filter_end;
+            }
+            else {
+                auto &last = filters.back();
+                filters.push_back(_filter);
+                last | filters.back();
+                filters.back() | _filter_end;
+            }
         }
 
         void reset() {
-            delete _filter;
-            _filter = nullptr;
+            filters.clear();
         }
 
         virtual ~source() {

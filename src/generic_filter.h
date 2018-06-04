@@ -23,6 +23,8 @@ namespace pipeline {
             void accept(T value) {
                 this->push(value);
             }
+
+            virtual ~in_source() {}
         };
 
         class out_sink final : public sink<T> {
@@ -37,9 +39,16 @@ namespace pipeline {
             }
         };
 
-        filter<T> *_filter;
+        std::unique_ptr<filter<T>> _filter;
         in_source _source;
         out_sink _sink;
+
+        explicit generic_filter(std::unique_ptr<filter<T>> _filter) : _filter(std::move(_filter)), _source(this), _sink(this) {
+            _source | *this->_filter;
+            *this->_filter | _sink;
+        }
+
+        explicit generic_filter(filter<T> *_filter) : generic_filter(std::unique_ptr<filter<T>>(_filter)) {}
 
     protected:
         void accept(T value) override {
@@ -48,10 +57,9 @@ namespace pipeline {
 
     public:
         template <class TFilter>
-        generic_filter(const TFilter &_filter) : _filter(new TFilter(_filter)), _source(this), _sink(this) { // NOLINT
-            _source | *this->_filter;
-            *this->_filter | _sink;
-        }
+        generic_filter(const TFilter &_filter) : generic_filter((filter<T> *) new TFilter(_filter)) {} // NOLINT
+
+        generic_filter(generic_filter &&other) : generic_filter(std::move(other._filter)) {}
 
         generic_filter(std::function<T(T)> _function) : generic_filter(pipeline(_function)) {} // NOLINT
     };

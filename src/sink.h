@@ -31,16 +31,24 @@ namespace pipeline {
         virtual void accept(T value) = 0;
 
     public:
+        void unbind() {
+            _binding.replace(nullptr, nullptr);
+        }
+
         void bind(source_binding<T> *_source) {
             if (_source)
                 _binding.replace(_source, new true_sink_binding(this));
             else
-                _binding.replace(nullptr, nullptr);
+                unbind();
         }
 
         friend void operator|(T value, sink<T> &_sink) {
-            _sink._binding.replace(nullptr, nullptr);
+            _sink.unbind();
             _sink.accept(value);
+        }
+
+        virtual ~sink() {
+            unbind();
         }
     };
 }

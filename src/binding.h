@@ -7,6 +7,8 @@
 
 
 #include <memory>
+#include <iostream>
+#include <typeinfo>
 #include "source_binding.h"
 #include "sink_binding.h"
 
@@ -16,10 +18,14 @@ namespace pipeline {
     private:
         std::unique_ptr<source_binding<T>> _source;
         std::unique_ptr<sink_binding<T>> _sink;
+        bool destructing = false;
 
         void bind() {
-            if (_source && _sink)
-                _source->bind([this] (const T &value) { _sink->push(value); }, [this] () { replace(nullptr, nullptr); });
+            if (_source && _sink) {
+                _source->bind([this](const T &value) { _sink->push(value); },
+                              [this]() { if (!destructing) replace(nullptr, nullptr); });
+                std::cerr << "Bound " << typeid(*_sink).name() << " to " << typeid(*_source).name() << std::endl;
+            }
         }
 
     public:
@@ -45,6 +51,10 @@ namespace pipeline {
 
         void replace(source_binding<T> *_source, sink_binding<T> *_sink) {
             replace(std::unique_ptr<source_binding<T>>(_source), std::unique_ptr<sink_binding<T>>(_sink));
+        }
+
+        ~binding() {
+            destructing = true;
         }
     };
 }
