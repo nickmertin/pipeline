@@ -164,6 +164,9 @@ namespace pipeline {
                 b->unbind();
             }
             bindings_queue.unlock();
+            for (generic_filter<T> &_filter : filters) {
+                _filter.unbind();
+            }
         }
     };
 }
