@@ -7,10 +7,13 @@
 
 
 #include <memory>
-#include <iostream>
-#include <typeinfo>
 #include "source_binding.h"
 #include "sink_binding.h"
+
+#ifdef PIPELINE_DEBUG
+#include <iostream>
+#include <typeinfo>
+#endif // PIPELINE_DEBUG
 
 namespace pipeline {
     template <class T>
@@ -24,7 +27,9 @@ namespace pipeline {
             if (_source && _sink) {
                 _source->bind([this](const T &value) { _sink->push(value); },
                               [this]() { if (!destructing) replace(nullptr, nullptr); });
-                std::cerr << "Bound " << typeid(*_sink).name() << " to " << typeid(*_source).name() << std::endl;
+#ifdef PIPELINE_DEBUG
+                std::cerr << "Bound " << typeid(*_sink).name() << " (" << std::hex << &*_sink << ") to " << typeid(*_source).name() << " (" << std::hex << &*_source << ")" << std::endl;
+#endif // PIPELINE_DEBUG
             }
         }
 

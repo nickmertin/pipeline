@@ -48,6 +48,9 @@ namespace pipeline {
         }
 
         virtual ~sink() {
+#ifdef PIPELINE_DEBUG
+            std::cerr << "Destruct sink " << typeid(*this).name() << " (" << std::hex << this << ")" << std::endl;
+#endif // PIPELINE_DEBUG
             unbind();
         }
     };

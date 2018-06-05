@@ -151,6 +151,9 @@ namespace pipeline {
         }
 
         virtual ~source() {
+#ifdef PIPELINE_DEBUG
+            std::cerr << "Destruct source " << typeid(*this).name() << " (" << std::hex << this << ")" << std::endl;
+#endif // PIPELINE_DEBUG
             for (true_source_binding *b : bindings) {
                 b->unbind();
             }
