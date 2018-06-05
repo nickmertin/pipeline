@@ -11,6 +11,9 @@
 #include "generic_filter.h"
 
 namespace pipeline {
+    template <class T>
+    class source;
+
     template<class T>
     class generic_filter;
 

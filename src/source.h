@@ -13,6 +13,7 @@
 #include "sink.h"
 #include "function_queue.h"
 #include "pipeline.h"
+#include "generic_filter.h"
 
 namespace pipeline {
     template <class T>
