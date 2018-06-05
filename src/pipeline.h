@@ -25,7 +25,8 @@ namespace pipeline {
 
     template <class T, class U>
     function_filter<T, U> pipeline(U (*_function)(T)) {
-        return function_filter<T, U>(_function);
+        std::function<U(T)> f = _function;
+        return function_filter<T, U>(f);
     };
 
     template <class T>
