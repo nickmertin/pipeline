@@ -19,7 +19,7 @@ namespace pipeline {
     public:
         filter() {}
 
-        filter(const filter &other) = default;
+        filter(filter<T> &&) noexcept = default;
     };
 }
 

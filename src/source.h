@@ -98,6 +98,17 @@ namespace pipeline {
     public:
         source() : bindings_queue(this), _filter_end(this) {}
 
+        source(source<T> &&other) noexcept : bindings_queue(this), _filter_end(this) {
+            for (generic_filter<T> &f : other.filters) {
+                generic_filter<T> *last = filters.empty() ? nullptr : &filters.back();
+                filters.push_back(std::move(f));
+                if (last)
+                    *last | filters.back();
+            }
+            if (!filters.empty())
+                filters.front().bind(&_filter_start);
+        }
+
     private:
         void push_internal(T value) {
             bindings_queue.lock();
@@ -150,6 +161,13 @@ namespace pipeline {
                 last | filters.back();
                 filters.back() | _filter_end;
             }
+            return *this;
+        }
+
+        void unbind_all() {
+            bindings_queue.lock();
+            bindings.clear();
+            bindings_queue.unlock();
         }
 
         void reset() {
@@ -160,11 +178,7 @@ namespace pipeline {
 #ifdef PIPELINE_DEBUG
             std::cerr << "Destruct source " << typeid(*this).name() << " (" << std::hex << this << ")" << std::endl;
 #endif // PIPELINE_DEBUG
-            bindings_queue.lock();
-            for (true_source_binding *b : bindings) {
-                b->unbind();
-            }
-            bindings_queue.unlock();
+            unbind_all();
             for (generic_filter<T> &_filter : filters) {
                 _filter.unbind();
             }

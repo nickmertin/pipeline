@@ -31,6 +31,10 @@ namespace pipeline {
         virtual void accept(T value) = 0;
 
     public:
+        sink() = default;
+
+        sink(sink<T> &&other) noexcept {}
+
         void unbind() {
             _binding.replace(nullptr, nullptr);
         }

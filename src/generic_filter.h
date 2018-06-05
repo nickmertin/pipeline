@@ -36,9 +36,13 @@ namespace pipeline {
         std::unique_ptr<filter<T>> _filter;
         in_source *_source;
 
-        explicit generic_filter(std::unique_ptr<filter<T>> _filter) : _filter(std::move(_filter)), _source(new in_source(this)) {
+        void bind_internal() {
             this->_filter->bind(_source);
-            *this->_filter | (std::function<void(T)>) [this] (T value) { this->push(value); };
+            *this->_filter | [this] (T value) { this->push(value); };
+        }
+
+        explicit generic_filter(std::unique_ptr<filter<T>> _filter) : _filter(std::move(_filter)), _source(new in_source(this)) {
+            bind_internal();
         }
 
         explicit generic_filter(filter<T> *_filter) : generic_filter(std::unique_ptr<filter<T>>(_filter)) {}
@@ -57,7 +61,11 @@ namespace pipeline {
         template <class TFilter>
         generic_filter(const TFilter &_filter) : generic_filter(get_pointer(as_pipeline<T, TFilter>::get(_filter))) {} // NOLINT
 
-        generic_filter(generic_filter &&other) noexcept : generic_filter(std::move(other._filter)) {}
+        generic_filter(generic_filter<T> &&other) noexcept : filter<T>(std::move(other)), _filter(std::move(other._filter)), _source(new in_source(this)) {
+            _filter->unbind();
+            _filter->unbind_all();
+            bind_internal();
+        }
     };
 }
 
