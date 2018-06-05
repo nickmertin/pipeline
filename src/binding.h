@@ -24,6 +24,8 @@ namespace pipeline {
         bool destructing = false;
 
         void bind() {
+            if (destructing)
+                return;
             if (_source && _sink) {
                 _source->bind([this](const T &value) { _sink->push(value); },
                               [this]() { if (!destructing) replace(nullptr, nullptr); });
@@ -49,8 +51,8 @@ namespace pipeline {
         binding<T> &operator=(const binding<T> &) = delete;
 
         void replace(std::unique_ptr<source_binding<T>> _source, std::unique_ptr<sink_binding<T>> _sink) {
-            this->_source = std::move(_source);
             this->_sink = std::move(_sink);
+            this->_source = std::move(_source);
             bind();
         }
 
