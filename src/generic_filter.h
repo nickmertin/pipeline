@@ -9,6 +9,7 @@
 #include "filter.h"
 #include "pipeline.h"
 #include "function_filter.h"
+#include "as_pipeline.h"
 
 namespace pipeline {
     template <class T>
@@ -42,6 +43,11 @@ namespace pipeline {
 
         explicit generic_filter(filter<T> *_filter) : generic_filter(std::unique_ptr<filter<T>>(_filter)) {}
 
+        template <class TFilter>
+        static filter<T> *get_pointer(const TFilter &_filter) {
+            return dynamic_cast<filter<T> *>(new TFilter(_filter));
+        }
+
     protected:
         void accept(T value) override {
             _source->accept(value);
@@ -49,11 +55,9 @@ namespace pipeline {
 
     public:
         template <class TFilter>
-        generic_filter(const TFilter &_filter) : generic_filter((filter<T> *) new TFilter(_filter)) {} // NOLINT
+        generic_filter(const TFilter &_filter) : generic_filter(get_pointer(as_pipeline<T, TFilter>::get(_filter))) {} // NOLINT
 
         generic_filter(generic_filter &&other) noexcept : generic_filter(std::move(other._filter)) {}
-
-        generic_filter(std::function<T(T)> _function) : generic_filter(pipeline(_function)) {} // NOLINT
     };
 }
 

@@ -9,8 +9,8 @@
 #include "../src/generic_filter.h"
 
 int main() {
-    pipeline::generic_filter<double> filter((std::function<double(double)>) ::sin);
-    filter |= (std::function<double(double)>) ::cos;
+    pipeline::generic_filter<double> filter(::sin);
+    filter |= ::cos;
     filter | [] (double x) { std::cout << x << std::endl; };
     17.5 | filter;
     return 0;

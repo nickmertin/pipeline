@@ -12,6 +12,7 @@
 #include "source_binding.h"
 #include "sink.h"
 #include "function_queue.h"
+#include "pipeline.h"
 
 namespace pipeline {
     template <class T>
