@@ -10,7 +10,7 @@ namespace pipeline {
     template <class T>
     class sink_binding {
     public:
-        virtual void push(T value) = 0;
+        virtual void push(const T &value) = 0;
 
         virtual ~sink_binding() {}
     };

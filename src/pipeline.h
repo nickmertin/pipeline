@@ -15,16 +15,13 @@ namespace pipeline {
     template <class T>
     class filter;
 
-    template <bool is_filter>
-    class pipeline_impl;
-
     template<class T, class U>
-    function_filter<T, U> pipeline(std::function<U(T)> _function) {
+    function_filter<T, U> pipeline(std::function<const U &(const T &)> _function) {
         return function_filter<T, U>(_function);
     };
 
     template <class T, class U>
-    function_filter<T, U> pipeline(U (*_function)(T)) {
+    function_filter<T, U> pipeline(const U &(*_function)(const T &)) {
         std::function<U(T)> f = _function;
         return function_filter<T, U>(f);
     };

@@ -12,7 +12,7 @@ namespace pipeline {
     template <class T>
     class source_binding {
     public:
-        virtual void bind(std::function<void(T)> push, std::function<void()> unbind) = 0;
+        virtual void bind(std::function<void(const T &)> push, std::function<void()> unbind) = 0;
 
         virtual ~source_binding() {}
     };

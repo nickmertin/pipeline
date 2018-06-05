@@ -38,7 +38,7 @@ namespace pipeline {
         public:
             explicit true_source_binding(source<T> *_source) : _source(_source) {}
 
-            void bind(std::function<void(T)> push, std::function<void()> unbind) final {
+            void bind(std::function<void(const T &)> push, std::function<void()> unbind) final {
                 _push = push;
                 _unbind = unbind;
                 _source->bindings_queue.run([this] (source<T> *_source) { _source->bindings.insert(this); });
@@ -73,7 +73,7 @@ namespace pipeline {
 
             filter_start() : push() {}
 
-            void bind(std::function<void(T)> push, std::function<void()> unbind) override {
+            void bind(std::function<void(const T &)> push, std::function<void()> unbind) override {
                 this->push = push;
             }
         };
@@ -86,7 +86,7 @@ namespace pipeline {
             explicit filter_end(source<T> *_source) : _source(_source) {}
 
         protected:
-            void accept(T value) override {
+            void accept(const T &value) override {
                 _source->push_internal(value);
             }
         };
@@ -141,7 +141,7 @@ namespace pipeline {
                 function_sink(const std::function<void(T)> &_function) : _function(_function) {}
 
             protected:
-                void push(T value) override {
+                void push(const T &value) override {
                     _function(value);
                 }
             };

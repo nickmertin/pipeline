@@ -20,7 +20,7 @@ namespace pipeline {
         public:
             explicit true_sink_binding(sink<T> *_sink) : _sink(_sink) {}
             
-            void push(T value) override {
+            void push(const T &value) override {
                 _sink->accept(value);
             }
         };
@@ -28,7 +28,7 @@ namespace pipeline {
         binding<T> _binding;
 
     protected:
-        virtual void accept(T value) = 0;
+        virtual void accept(const T &value) = 0;
 
     public:
         sink() = default;
@@ -46,7 +46,7 @@ namespace pipeline {
                 unbind();
         }
 
-        friend void operator|(T value, sink<T> &_sink) {
+        friend void operator|(const T &value, sink<T> &_sink) {
             _sink.unbind();
             _sink.accept(value);
         }

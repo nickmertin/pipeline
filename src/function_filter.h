@@ -17,10 +17,10 @@ namespace pipeline {
     public:
         function_filter(const function_filter<T, U> &other) : _function(other._function) {}
 
-        explicit function_filter(const std::function<U(T)> &_function) : _function(_function) {}
+        explicit function_filter(const std::function<const U &(const T &)> &_function) : _function(_function) {}
 
     private:
-        void accept(T value) override {
+        void accept(const T &value) override {
             push(_function(value));
         }
     };
@@ -33,10 +33,10 @@ namespace pipeline {
     public:
         function_filter(const function_filter<T, T> &other) : _function(other._function) {}
 
-        explicit function_filter(const std::function<T(T)> &_function) : _function(_function) {}
+        explicit function_filter(const std::function<const T &(const T &)> &_function) : _function(_function) {}
 
     private:
-        void accept(T value) override {
+        void accept(const T &value) override {
             this->push(_function(value));
         }
     };

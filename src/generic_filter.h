@@ -17,16 +17,16 @@ namespace pipeline {
     private:
         class in_source final : public source_binding<T> {
             generic_filter<T> *_filter;
-            std::function<void(T)> push;
+            std::function<void(const T &)> push;
 
         public:
             explicit in_source(generic_filter<T> *_filter) : _filter(_filter) {}
 
-            void bind(std::function<void(T)> push, std::function<void()> unbind) override {
+            void bind(std::function<void(const T &)> push, std::function<void()> unbind) override {
                 this->push = push;
             }
 
-            void accept(T value) {
+            void accept(const T &value) {
                 push(value);
             }
 
@@ -38,7 +38,7 @@ namespace pipeline {
 
         void bind_internal() {
             this->_filter->bind(_source);
-            *this->_filter | [this] (T value) { this->push(value); };
+            *this->_filter | [this] (const T &value) { this->push(value); };
         }
 
         explicit generic_filter(std::unique_ptr<filter<T>> _filter) : _filter(std::move(_filter)), _source(new in_source(this)) {
@@ -53,7 +53,7 @@ namespace pipeline {
         }
 
     protected:
-        void accept(T value) override {
+        void accept(const T &value) override {
             _source->accept(value);
         }
 
