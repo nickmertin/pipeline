@@ -11,6 +11,7 @@
 #include <vector>
 #include "source_binding.h"
 #include "sink.h"
+#include "function_queue.h"
 
 namespace pipeline {
     template <class T>
@@ -22,6 +23,8 @@ namespace pipeline {
     template <class T>
     class source {
     private:
+        function_queue<source<T> *> bindings_queue;
+
         class true_source_binding : public source_binding<T> {
         protected:
             source<T> *_source;
@@ -36,7 +39,7 @@ namespace pipeline {
             void bind(std::function<void(T)> push, std::function<void()> unbind) final {
                 _push = push;
                 _unbind = unbind;
-                _source->bindings.insert(this);
+                _source->bindings_queue.run([this] (source<T> *_source) { _source->bindings.insert(this); });
             }
 
             void push(T value) {
@@ -50,7 +53,7 @@ namespace pipeline {
             }
 
             virtual ~true_source_binding() {
-                _source->bindings.erase(this);
+                _source->bindings_queue.run([this] (source<T> *_source) { _source->bindings.erase(this); });
             }
         };
 
@@ -92,13 +95,15 @@ namespace pipeline {
         filter_end _filter_end;
 
     public:
-        source() : _filter_end(this) {}
+        source() : bindings_queue(this), _filter_end(this) {}
 
     private:
         void push_internal(T value) {
+            bindings_queue.lock();
             for (true_source_binding *b : bindings) {
                 b->push(value);
             }
+            bindings_queue.unlock();
         }
 
     protected:
@@ -154,9 +159,11 @@ namespace pipeline {
 #ifdef PIPELINE_DEBUG
             std::cerr << "Destruct source " << typeid(*this).name() << " (" << std::hex << this << ")" << std::endl;
 #endif // PIPELINE_DEBUG
+            bindings_queue.lock();
             for (true_source_binding *b : bindings) {
                 b->unbind();
             }
+            bindings_queue.unlock();
         }
     };
 }
