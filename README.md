@@ -1,5 +1,7 @@
 # pipeline
 
+**NOTE:** This is an older, incomplete attempt at writing this library; the latest version, including a stable release, [is available on GitLab](https://gitlab.com/nickmertin/pipeline).
+
 Pipeline is a library for C++ that supports the creation of "data networks" (pipelines), to control the flow of values between various components of the program logically and functionally.
 
 ## Concepts
